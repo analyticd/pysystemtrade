@@ -1,0 +1,11 @@
+name: analyticd-pysystemtrade
+dependencies:
+- python=3
+- pip
+- pip:
+    - "pandas >= 0.22.0"
+    - "numpy >= 1.13.3"
+    - "matplotlib >= 1.4.3"
+    - "pyyaml>=3.11"
+    - "scipy>=1.0.0"
+    - "quandl>=3.3.0"
