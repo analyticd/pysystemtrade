@@ -5,7 +5,6 @@ The third part ['Processes'](#Processes) discusses certain processes that cut
 across multiple parts of the code in more detail. The final part
 ['Reference'](#reference) includes lists of methods and parameters.
 
-
 Table of Contents
 =================
 
@@ -16,17 +15,34 @@ Table of Contents
       * [How do I....See intermediate results from a backtest](#how-do-isee-intermediate-results-from-a-backtest)
       * [How do I....See how profitable a backtest was](#how-do-isee-how-profitable-a-backtest-was)
       * [How do I....Change backtest parameters](#how-do-ichange-backtest-parameters)
+         * [Option 1: Change the configuration file](#option-1-change-the-configuration-file)
+         * [Option 2: Change the configuration object; create a new system](#option-2-change-the-configuration-object-create-a-new-system)
+         * [Option 3: Change the configuration object within an existing system (not recommended - advanced)](#option-3-change-the-configuration-object-within-an-existing-system-not-recommended---advanced)
+         * [Option 4: Change the project defaults (definitely not recommended)](#option-4-change-the-project-defaults-definitely-not-recommended)
       * [How do I....Run a backtest on a different set of instruments](#how-do-irun-a-backtest-on-a-different-set-of-instruments)
+         * [Change instruments: Change the configuration file](#change-instruments-change-the-configuration-file)
+         * [Change instruments: Change the configuration object](#change-instruments-change-the-configuration-object)
       * [How do I....Create my own trading rule](#how-do-icreate-my-own-trading-rule)
+         * [Writing the function](#writing-the-function)
       * [How do I....Use different data or instruments](#how-do-iuse-different-data-or-instruments)
       * [How do I... Save my work](#how-do-i-save-my-work)
    * [Guide](#guide)
       * [Data](#data)
          * [Using the standard data objects](#using-the-standard-data-objects)
+            * [Generic data objects](#generic-data-objects)
+            * [The <a href="/sysdata/csv/csv_sim_futures_data.py">csvFuturesSimData</a> object](#the-csvfuturessimdata-object)
+            * [The arcticSimData object](#the-arcticsimdata-object)
          * [Creating your own data objects](#creating-your-own-data-objects)
+            * [The Data() class](#the-data-class)
       * [Configuration](#configuration)
          * [Creating a configuration object](#creating-a-configuration-object)
+            * [1) Creating a configuration object with a dictionary](#1-creating-a-configuration-object-with-a-dictionary)
+            * [2) Creating a configuration object from a file](#2-creating-a-configuration-object-from-a-file)
+            * [3) Creating a configuration object from a pre-baked system](#3-creating-a-configuration-object-from-a-pre-baked-system)
+            * [4) Creating a configuration object from a list](#4-creating-a-configuration-object-from-a-list)
          * [Project defaults](#project-defaults)
+            * [Handling defaults when you change certain functions](#handling-defaults-when-you-change-certain-functions)
+            * [How the defaults work](#how-the-defaults-work)
          * [Viewing configuration parameters](#viewing-configuration-parameters)
          * [Modifying configuration parameters](#modifying-configuration-parameters)
          * [Using configuration in a system](#using-configuration-in-a-system)
@@ -35,10 +51,16 @@ Table of Contents
          * [Modifying the configuration class](#modifying-the-configuration-class)
       * [System](#system)
          * [Pre-baked systems](#pre-baked-systems)
+            * [<a href="/systems/provided/futures_chapter15/basesystem.py">Futures system for chapter 15</a>](#futures-system-for-chapter-15)
+            * [<a href="/systems/provided/futures_chapter15/estimatedsystem.py">Futures system for chapter 15</a>](#futures-system-for-chapter-15-1)
          * [Using the system object](#using-the-system-object)
+            * [Accessing child stages, data, and config within a system](#accessing-child-stages-data-and-config-within-a-system)
+            * [System methods](#system-methods)
          * [System Caching and pickling](#system-caching-and-pickling)
          * [Pickling and unpickling saved cache data](#pickling-and-unpickling-saved-cache-data)
          * [Advanced caching](#advanced-caching)
+            * [Advanced Caching when backtesting.](#advanced-caching-when-backtesting)
+            * [Advanced caching behaviour with a live trading system](#advanced-caching-behaviour-with-a-live-trading-system)
          * [Very advanced: Caching in new or modified code](#very-advanced-caching-in-new-or-modified-code)
          * [Creating a new 'pre-baked' system](#creating-a-new-pre-baked-system)
          * [Changing or making a new System class](#changing-or-making-a-new-system-class)
@@ -47,28 +69,133 @@ Table of Contents
          * [Writing new stages](#writing-new-stages)
          * [Specific stages](#specific-stages)
          * [Stage: Raw data](#stage-raw-data)
+            * [Using the standard <a href="/systems/rawdata.py">RawData class</a>](#using-the-standard-rawdata-class)
+               * [Volatility calculation](#volatility-calculation)
+            * [Using the <a href="/systems/futures/rawdata.py">FuturesRawData class</a>](#using-the-futuresrawdata-class)
+            * [New or modified raw data classes](#new-or-modified-raw-data-classes)
          * [Stage: Rules](#stage-rules)
          * [Trading rules](#trading-rules)
          * [The Rules class, and specifying lists of trading rules](#the-rules-class-and-specifying-lists-of-trading-rules)
+            * [Creating lists of rules from a configuration object](#creating-lists-of-rules-from-a-configuration-object)
+            * [Interactively passing a list of trading rules](#interactively-passing-a-list-of-trading-rules)
+            * [Creating variations on a single trading rule](#creating-variations-on-a-single-trading-rule)
+            * [Using a newly created Rules() instance](#using-a-newly-created-rules-instance)
+            * [Passing trading rules to a pre-baked system function](#passing-trading-rules-to-a-pre-baked-system-function)
+            * [Changing the trading rules in a system on the fly (advanced)](#changing-the-trading-rules-in-a-system-on-the-fly-advanced)
          * [Stage: Forecast scale and cap <a href="/systems/forecast_scale_cap.py">ForecastScaleCap class</a>](#stage-forecast-scale-and-cap-forecastscalecap-class)
+            * [Using fixed weights (/systems/forecast_scale_cap.py)](#using-fixed-weights-systemsforecast_scale_cappy)
+            * [Calculating estimated forecasting scaling on the fly(/systems/forecast_scale_cap.py)](#calculating-estimated-forecasting-scaling-on-the-flysystemsforecast_scale_cappy)
+               * [Pooled forecast scale estimate (default)](#pooled-forecast-scale-estimate-default)
+               * [Individual instrument forecast scale estimate](#individual-instrument-forecast-scale-estimate)
+            * [New or modified forecast scaling and capping](#new-or-modified-forecast-scaling-and-capping)
          * [Stage: Forecast combine <a href="/systems/forecast_combine.py">ForecastCombine class</a>](#stage-forecast-combine-forecastcombine-class)
+            * [Using fixed weights and multipliers(/systems/forecast_combine.py)](#using-fixed-weights-and-multiplierssystemsforecast_combinepy)
+            * [Using estimated weights and diversification multiplier(/systems/forecast_combine.py)](#using-estimated-weights-and-diversification-multipliersystemsforecast_combinepy)
+               * [Estimating the forecast weights](#estimating-the-forecast-weights)
+               * [Estimating the forecast diversification multiplier](#estimating-the-forecast-diversification-multiplier)
+            * [Writing new or modified forecast combination stages](#writing-new-or-modified-forecast-combination-stages)
          * [Stage: Position scaling](#stage-position-scaling)
+            * [Using the standard <a href="/systems/positionsizing.py">PositionSizing class</a>](#using-the-standard-positionsizing-class)
          * [Stage: Creating portfolios <a href="/systems/portfolio.py">Portfolios class</a>](#stage-creating-portfolios-portfolios-class)
+            * [Using fixed weights and instrument diversification multiplier(/systems/portfolio.py)](#using-fixed-weights-and-instrument-diversification-multipliersystemsportfoliopy)
+            * [Using estimated weights and instrument diversification multiplier(/systems/portfolio.py)](#using-estimated-weights-and-instrument-diversification-multipliersystemsportfoliopy)
+               * [Estimating the instrument weights](#estimating-the-instrument-weights)
+               * [Estimating the forecast diversification multiplier](#estimating-the-forecast-diversification-multiplier-1)
+            * [Buffering and position intertia](#buffering-and-position-intertia)
+            * [Capital correction](#capital-correction)
+            * [Writing new or modified portfolio stages](#writing-new-or-modified-portfolio-stages)
          * [Stage: Accounting](#stage-accounting)
+            * [Using the standard <a href="/systems/account.py">Account class</a>](#using-the-standard-account-class)
+            * [accountCurve](#accountcurve)
+            * [accountCurveGroup in more detail](#accountcurvegroup-in-more-detail)
+            * [A nested accountCurveGroup](#a-nested-accountcurvegroup)
+               * [Weighted and unweighted account curve groups](#weighted-and-unweighted-account-curve-groups)
+            * [Testing account curves](#testing-account-curves)
+            * [Costs](#costs)
+            * [Writing new or modified accounting stages](#writing-new-or-modified-accounting-stages)
    * [Processes](#processes)
       * [Logging](#logging)
+         * [Basic logging](#basic-logging)
+         * [Advanced logging](#advanced-logging)
       * [Optimisation](#optimisation)
+         * [The optimisation function, and data](#the-optimisation-function-and-data)
+         * [Removing expensive assets (forecast weights only)](#removing-expensive-assets-forecast-weights-only)
+         * [Pooling gross returns (forecast weights only)](#pooling-gross-returns-forecast-weights-only)
+         * [Working out net costs (both instrument and forecast weights)](#working-out-net-costs-both-instrument-and-forecast-weights)
+         * [Time periods](#time-periods)
+         * [Moment estimation](#moment-estimation)
+         * [Methods](#methods)
+            * [Equal weights](#equal-weights)
+            * [One period (not recommend)](#one-period-not-recommend)
+            * [Bootstrapping (recommended, but slow)](#bootstrapping-recommended-but-slow)
+            * [Shrinkage](#shrinkage)
+         * [Post processing](#post-processing)
       * [Estimating correlations and diversification multipliers](#estimating-correlations-and-diversification-multipliers)
       * [Capital correction: Varying capital](#capital-correction-varying-capital)
    * [Reference](#reference)
       * [Table of standard system.data and system.stage methods](#table-of-standard-systemdata-and-systemstage-methods)
+         * [Explanation of columns](#explanation-of-columns)
+         * [System object](#system-object)
+         * [Data object](#data-object)
+         * [<a href="#stage_rawdata">Raw data stage</a>](#raw-data-stage)
+         * [<a href="#rules">Trading rules stage (chapter 7 of book)</a>](#trading-rules-stage-chapter-7-of-book)
+         * [<a href="#stage_scale">Forecast scaling and capping stage (chapter 7 of book)</a>](#forecast-scaling-and-capping-stage-chapter-7-of-book)
+         * [<a href="#stage_combine">Combine forecasts stage (chapter 8 of book)</a>](#combine-forecasts-stage-chapter-8-of-book)
+         * [<a href="#position_scale">Position sizing stage (chapters 9 and 10 of book)</a>](#position-sizing-stage-chapters-9-and-10-of-book)
+         * [<a href="#stage_portfolio">Portfolio stage (chapter 11 of book)</a>](#portfolio-stage-chapter-11-of-book)
+         * [<a href="#accounts_stage">Accounting stage</a>](#accounting-stage)
       * [Configuration options](#configuration-options)
+         * [Raw data stage](#raw-data-stage-1)
+            * [Volatility calculation](#volatility-calculation-1)
+         * [Rules stage](#rules-stage)
+            * [Trading rules](#trading-rules-1)
+         * [Forecast scaling and capping stage](#forecast-scaling-and-capping-stage)
+            * [Forecast scalar (fixed)](#forecast-scalar-fixed)
+            * [Forecast scalar (estimated)](#forecast-scalar-estimated)
+            * [Forecast cap (fixed - all classes)](#forecast-cap-fixed---all-classes)
+         * [Forecast combination stage](#forecast-combination-stage)
+            * [Forecast weights (fixed)](#forecast-weights-fixed)
+            * [Forecast weights (estimated)](#forecast-weights-estimated)
+               * [List of trading rules to get forecasts for](#list-of-trading-rules-to-get-forecasts-for)
+               * [Parameters for estimating forecast weights](#parameters-for-estimating-forecast-weights)
+            * [Forecast diversification multiplier  (fixed)](#forecast-diversification-multiplier--fixed)
+            * [Forecast diversification multiplier  (estimated)](#forecast-diversification-multiplier--estimated)
+               * [Forecast correlation calculation](#forecast-correlation-calculation)
+               * [Parameters for estimation of forecast diversification multiplier](#parameters-for-estimation-of-forecast-diversification-multiplier)
+         * [Position sizing stage](#position-sizing-stage)
+            * [Capital scaling parameters](#capital-scaling-parameters)
+         * [Portfolio combination stage](#portfolio-combination-stage)
+            * [Instrument weights (fixed)](#instrument-weights-fixed)
+            * [Instrument weights (estimated)](#instrument-weights-estimated)
+            * [Instrument diversification multiplier (fixed)](#instrument-diversification-multiplier-fixed)
+            * [Instrument diversification multiplier (estimated)](#instrument-diversification-multiplier-estimated)
+               * [Instrument corrrelations](#instrument-corrrelations)
+               * [Parameters for estimation of instrument diversification multiplier](#parameters-for-estimation-of-instrument-diversification-multiplier)
+            * [Buffering](#buffering)
+         * [Accounting stage](#accounting-stage-1)
+            * [Buffering and position intertia](#buffering-and-position-intertia-1)
+            * [Costs](#costs-1)
+            * [Capital correction](#capital-correction-1)
+
+TOC created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)
 
 
 <a name="how_do_i">
 </a>
 
 # How do I?
+
+   * [How do I.... Experiment with a single trading rule and instrument](#how-do-i-experiment-with-a-single-trading-rule-and-instrument)
+   * [How do I....Create a standard futures backtest](#how-do-icreate-a-standard-futures-backtest)
+   * [How do I....Create a futures backtest which estimates parameters](#how-do-icreate-a-futures-backtest-which-estimates-parameters)
+   * [How do I....See intermediate results from a backtest](#how-do-isee-intermediate-results-from-a-backtest)
+   * [How do I....See how profitable a backtest was](#how-do-isee-how-profitable-a-backtest-was)
+   * [How do I....Change backtest parameters](#how-do-ichange-backtest-parameters)
+   * [How do I....Run a backtest on a different set of instruments](#how-do-irun-a-backtest-on-a-different-set-of-instruments)
+   * [How do I....Create my own trading rule](#how-do-icreate-my-own-trading-rule)
+   * [How do I....Use different data or instruments](#how-do-iuse-different-data-or-instruments)
+   * [How do I... Save my work](#how-do-i-save-my-work)
+
 
 ## How do I.... Experiment with a single trading rule and instrument
 
@@ -553,11 +680,9 @@ system=futures_system(config=config)
 
 ## How do I....Use different data or instruments
 
-Currently the only data that is supported is .csv files for futures stitched
-prices (eg US10_price.csv), fx (eg AUDUSDfx.csv), and futures specific (eg
-AEX_carrydata.csv), data. A set of data is provided in
-[pysystem/sys/data/legacycsv](/sysdata/legacycsv). It's my intention to update
-this and try to keep it reasonably current with each release.
+The default data used for the simulation is .csv files for futures stitched
+prices, fx and contract related data. It's my intention to update
+this and try to keep it reasonably current with each release. The data is stored in the [data/futures directory](/data/futures/)
 
 You can update that data, if you wish. Be careful to save it as a .csv with the
 right formatting, or pandas will complain. Check that a file is correctly
@@ -570,42 +695,37 @@ test
 ```
 You can also add new files for new instruments. Be sure to keep the file format and header names consistent.
 
-You can create your own directory for .csv files such as
-`pysystemtrade/private/system_name/data/'. Here is how you'd use it:
+You can create your own directory for .csv files. For example supposed you wanted to get your adjusted prices from
+`pysystemtrade/private/system_name/adjusted_price_data'. Here is how you'd use it:
 
 ```python
-from sysdata.csvdata import csvFuturesData
+from sysdata.csv.csv_sim_futures_data import csvFuturesSimData
 from systems.provided.futures_chapter15.basesystem import futures_system
 
-data=csvFuturesData("private.system_name.data"))
+data=csvFuturesSimData(datapath_dict=dict(adjusted_prices = "private.system_name.adjusted_price_data"))
 system=futures_system(data=data)
 ```
-Notice that we use python style "." internal references within a project, we don't give actual path names.
+Notice that we use python style "." internal references within a project, we don't give actual path names. The full list of keys that you can use in the `datapath_dict` are `config_data` (configuration and costs), `multiple_price_data` (prices for current, next and carry contracts), and `spot_fx_data` (for FX prices). Note that you can't put adjusted prices and carry data in the same directory since they use the same file format.
 
 There is more detail about using .csv files [here](#csv).
 
+If you want to store your data in Mongo DB databases instead you need to [use a different data object](#arctic_data).
+
+If you want to get your data from Quandl.com, then see the document [working with futures data](/docs/futures.md)
+
 If you want to get data from a different place (eg a database, yahoo finance,
 broker, quandl...) you'll need to [create your own Data object](#create_data).
-Note that I intend to add support for sqlite database, HDF5, Interactive
-brokers and quandl data in the future.
 
 If you want to use a different set of data values (eg equity EP ratios,
 interest rates...) you'll need to [create your own Data object](#create_data).
 
-*WORK IN PROGRESS*
-I'm currently working on including support so that you can:
-
-- Get futures data from Quandl
-- Store it individually in a database
-- Stitch contracts together to make an adjusted price
-
-See [working with futures data](/docs/futures.md)
+If you want to delve deeper into data storage see the document [working with futures data](/docs/futures.md)
 
 ## How do I... Save my work
 
 To remain organised it's good practice to save any work into a directory like
-`pysystemtrade/private/this_system_name/` (you'll need to create a couple of
-directories first). If you plan to contribute to github, just be careful to
+`pysystemtrade/private/this_system_name/` (you'll need to create the
+directory first). If you plan to contribute to github, just be careful to
 avoid adding 'private' to your commit ( [you may want to read
 this](https://24ways.org/2013/keeping-parts-of-your-codebase-private-on-github/)
 ).
@@ -663,29 +783,23 @@ particular **source** (for example .csv files, databases and so on).
 
 ### Using the standard data objects
 
-Only one kind of specific data object is provided with the system in the
-current version - `csvFutures`.
-
-*WORK IN PROGRESS*
-I'm currently working on including support so that you can:
-
-- Get futures data from Quandl
-- Store it individually in a database
-- Stitch contracts together to make an adjusted price
+Two kinds of specific data object is currently provided with the system in the
+current version - `csvFuturesSimData` (.csv files) and `arcticFuturesSimData` (database storage)
 
 See [working with futures data](/docs/futures.md)
 
+
 #### Generic data objects
 
-You can get use data objects directly:
+You can import and use data objects directly:
 
-*These commands will work with all data objects - the `csvFutures` version is
+*These commands will work with all data objects - the `csvFuturesSimData` version is
 used as an example.*
 
 ```python
-from sysdata.csvdata import csvFuturesData
+from sysdata.csv.csv_sim_futures_data import csvFuturesSimData
 
-data=csvFuturesData()
+data=csvFuturesSimData()
 
 ## getting data out
 data.methods() ## list of methods
@@ -719,18 +833,29 @@ should omit the system eg `data.get_raw_price`)
 
 <a name="csvdata"> </a>
 
-#### The [csvFuturesData](/sysdata/csvdata.py) object
+#### The [csvFuturesSimData](/sysdata/csv/csv_sim_futures_data.py) object
 
-The `csvFuturesData` object works like this:
+The `csvFuturesSimData` object works like this:
 
 ```python
-from sysdata.csvdata import csvFuturesData
+from sysdata.csv.csv_sim_futures_data import csvFuturesSimData
 
-## with the default folder
+## with the default folders
 data=csvFuturesData()
 
-## OR with a particular folder
-data=csvFuturesData("private.system_name.data")  ## assuming you've created data in pysystemtrade/private/system_name/data/
+## OR with different folders, by providing a dict containing the folder(s) to use
+data=csvFuturesData(datapath_dict = dict(key_name = "pathtodata.with.dots")) 
+
+# Permissible key names are 'spot_fx_data' (FX prices), 'multiple_price_data' (for carry and forward prices), 
+# 'adjusted_prices' and 'config_data' (configuration and costs). 
+# If a keyname is not present then the system defaults will be used
+
+# An example to override with FX data stored in /psystemtrade/private/data/fxdata/:
+
+data=csvFuturesSimData(datapath_dict = dict(spot_fx_data="private.data.fxdata")) 
+
+# WARNING: Do not store multiple_price_data and adjusted_price_data in the same directory
+#          They use the same file names!
 
 ## getting data out
 data.methods() ## will list any extra methods
@@ -742,22 +867,21 @@ system=futures_system(data=data)
 system.data.get_instrument_raw_carry_data(instrument_code)
 ```
 
-The pathname must contain .csv files of the following four types (where code is
+Each relevant pathname must contain .csv files of the following four types (where code is
 the instrument_code):
 
-1. Static data- `instrument_config.csv` headings: Instrument, Pointsize,
-   AssetClass, Currency
-2. Price data- `code_price.csv` (eg SP500_price.csv) headings: DATETIME, PRICE
-3. Futures data - `code_carrydata.csv` (eg AEX_carrydata.csv): headings:
-   DATETIME, PRICE,CARRY,CARRY_CONTRACT PRICE_CONTRACT
+1. Static configuration and cost data- `instrument_config.csv` headings: Instrument, Pointsize,
+   AssetClass, Currency. Additional headings for costs: Slippage, PerBlock,
+   Percentage, PerTrade. See ['costs'](#costs) for more detail.
+2. Adjusted price data- `code.csv` (eg SP500.csv) headings: DATETIME, PRICE
+3. Carry and forward data - `code.csv` (eg AEX.csv): headings:
+   DATETIME, PRICE,CARRY,FORWARD,CARRY_CONTRACT PRICE_CONTRACT, FORWARD_CONTRACT
 4. Currency data - `ccy1ccy2fx.csv` (eg AUDUSDfx.csv) headings: DATETIME,
    FXRATE
-5. Cost data - 'costs_analysis.csv' headings: Instrument, Slippage, PerBlock,
-   Percentage, PerTrade. See ['costs'](#costs) for more detail.
 
 DATETIME should be something that `pandas.to_datetime` can parse. Note that the
 price in (2) is the continously stitched price (see [volatility
-calculation](#vol_calc) ), whereas the price in (3) is the price of the
+calculation](#vol_calc) ), whereas the price column in (3) is the price of the
 contract we're currently trading.
 
 At a minimum we need to have a currency file for each instrument's currency
@@ -766,7 +890,60 @@ we're trading in (i.e. for a UK investor you'd need a `GBPUSDfx.csv` file). If
 cross rate files are available they will be used; otherwise the USD rates will
 be used to work out implied cross rates.
 
-See [pysystem/sysdata/legacycsv](/sysdata/legacycsv) for files you can modify.
+See data in subdirectories [pysystemtrade/data/futures](/data/futures) for files you can modify: 
+
+- [adjusted prices](/data/futures/adjusted_prices_csv),
+- [configuration and costs](/data/futures/csvconfig), 
+- [Futures specific carry and forward prices](/data/futures/multiple_prices_csv)
+- [Spot FX prices](/data/futures/fx_prices_csv)
+
+For more information see the [futures data document](/docs/futures.md#csvFuturesSimData).
+
+<a name="arctic_data"> </a>
+
+#### The [arcticSimData](/sysdata/arctic/arctic_and_mongo_sim_futures_data.py) object
+
+This is a simData object which gets it's data out of [Mongo DB](https://mongodb.com) (static) and [Arctic](https://github.com/manahl/arctic) (time series) (*Yes the class name should include both terms. Yes I shortened it so it isn't ridiculously long, and most of the interesting stuff comes from Arctic*). It is better for live trading.
+
+For production code, and storing large amounts of data (eg for individual futures contracts) we probably need something more robust than .csv files. 
+[MongoDB](https://mongodb.com) is a no-sql database which is rather fashionable at the moment, though the main reason I selected it for this purpose is that it is used by Arctic. [Arctic](https://github.com/manahl/arctic) is a superb open source time series database which sits on top of Mongo DB) and provides straightforward and fast storage of pandas DataFrames. It was created by my former colleagues at [Man AHL](https://ahl.com) (in fact I beta tested a very early version of Arctic), and then very generously released as open source. 
+
+There is more detail on this in the [futures data documentation](/docs/futures.md): [Mongo DB](/docs/futures.md#mongoDB) and [Arctic](/docs/futures.md#arctic).
+
+##### Setting up your Arctic and Mongo DB databases
+
+Obviously you will need to make sure you already have a Mongo DB instance running. You might find you already have one running, in Linux use `ps wuax | grep mongo` and then kill the relevant process. You also need to get [Arctic](https://github.com/manahl/arctic).
+
+Because the mongoDB data isn't included in the github repo, before using this you need to write the required data into Mongo and Arctic.
+You can do this from scratch, as per the ['futures data workflow'](/docs/futures.md#a-futures-data-workflow). Alternatively you can run the following scripts which will copy the data from the existing github .csv files:
+
+- [Instrument configuration and cost data](/sysinit/futures/repocsv_instrument_config.py)
+- [Adjusted prices](/sysinit/futures/repocsv_adjusted_prices.py)
+- [Multiple prices](/sysinit/futures/repocsv_multiple_prices.py)
+- [Spot FX prices](/sysinit/futures/repocsv_spotfx_prices.py)
+
+Of course it's also possible to mix these two methods. 
+
+##### Using arcticFuturesSimData
+
+Once you have the data it's just a matter of replacing the default csv data object:
+
+```python
+from systems.provided.futures_chapter15.basesystem import futures_system
+from sysdata.arctic.arctic_and_mongo_sim_futures_data import arcticFuturesSimData
+
+# with the default database
+data = arcticFuturesSimData()
+
+# OR with an alternative database (if you've populated your data into it already)
+data = arcticFuturesSimData(database_name="alternative")
+
+# using with a system
+
+system = futures_system(, log_level="on")
+print(system.accounts.portfolio().sharpe())
+```
+
 
 
 ### Creating your own data objects
@@ -774,27 +951,27 @@ See [pysystem/sysdata/legacycsv](/sysdata/legacycsv) for files you can modify.
 You should be familiar with the python object orientated idiom before reading
 this section.
 
-The [`Data()`](/sysdata/data) object is the base class for data. From that we
-inherit data type specific classes such as the
-[`FuturesData`](/sysdata/futuresdata) object. These in turn are inherited from
-for specific data sources, such as [`csvFuturesData`](/sysdata/csvdata).
+The [`simData()`](/sysdata/data) object is the base class for data used in simulations. From that we
+inherit data type specific classes such as those 
+[for futures](/sysdata/futuresdata) object. These in turn are inherited from
+for specific data sources, such as for csv files:[csvFuturesSimData()](/sysdata/csv/csv_sim_futures_data.py).
 
-So the FuturesData object is defined `class FuturesData(Data)`, and
-csvFuturesData as `class csvFuturesData(FuturesData)`. It would also be helpful
-if this naming scheme was adhered to: sourceTypeData. For example if we had
+It is helpful if this naming scheme was adhered to: sourceTypeSimData. For example if we had
 some single equity data stored in a database we'd do `class
-EquitiesData(Data)`, and `class dbEquitiesData(EquitiesData)`.
+EquitiesSimData(simData)`, and `class dbEquitiesSimData(EquitiesSimData)`.
 
 So, you should consider whether you need a new type of data, a new source of
 data or both. You may also wish to extend an existing class. For example if you
 wished to add some fundamental data for futures you might define: `class
-FundamentalFutures(FuturesData)`. You'd then need to inherit from that for a
+fundamentalFuturesSimData(futuresSimData)`. You'd then need to inherit from that for a
 specific source.
 
 This might seem a hassle, and it's tempting to skip and just inherit from
-`Data()` directly, however once your system is up and running it is very
+`simData()` directly, however once your system is up and running it is very
 convenient to have the possibility of multiple data sources and this process
 ensures they keep a consistent API for a given data type.
+
+It's worth reading the [documentation on futures data](/docs/futures.md#modify_SimData) to understand how [csvFuturesSimData()](/sysdata/csv/csv_sim_futures_data.py) is constructed before modifying it or creating your own data objects.
 
 #### The Data() class
 
@@ -803,7 +980,7 @@ Methods that you'll probably want to override:
 - `get_raw_price` Returns Tx1 pandas data frame
 - `get_instrument_list` Returns list of str
 - `get_value_of_block_price_move` Returns float
-- 'get_raw_cost_data' Returns a dict cost data
+- `get_raw_cost_data` Returns a dict cost data
 - `get_instrument_currency`: Returns str
 - `_get_fx_data(currency1, currency2)` Returns Tx1 pandas data frame of
   exchange rates
@@ -819,99 +996,6 @@ Neither should you override 'daily_prices'.
 Finally data methods should not do any caching. [Caching](#caching) is done
 within the system class.
 
-#### Creating a new type of data (or extending an existing one)
-
-Here is an annotated extract of the `FuturesData` class illustrating how it
-extends `Data`:
-
-```python
-
-class FuturesData(Data):
-
-    def get_instrument_raw_carry_data(self, instrument_code):
-    ### a method to get data specific for this asset class
-        ### normally we'd override this in the inherited method for a particular data source
-        ###
-
-        raise Exception("You have created a FuturesData() object; you probably need to replace this method to do anything useful")
-
-
-
-    def __repr__(self):
-        ### modify this method so we can tell what type of data we have
-        return "FuturesData object with %d instruments" % len(self.get_instrument_list())
-```
-
-#### Creating a new data source (or extending an existing one)
-
-Here is an annotated extract of the `csvFuturesData` class, illustrating how it
-extends `FuturesData` and `Data` for a specific source:
-
-```python
-class csvFuturesData(FuturesData):
-    """
-        Get futures specific data from legacy csv files
-
-        Extends the FuturesData class for a specific data source
-
-    """
-
-    def __init__(self, datapath=None):
-
-        if datapath is None:
-            datapath=get_pathname_for_package(LEGACY_DATA_MODULE, LEGACY_DATA_DIR)
-
-        """
-        Most Data objects that read data from a specific place have a 'source' of some kind
-        Here it's a directory
-    We need to store it for future reference
-        """
-        setattr(self, "_datapath", datapath)
-
-
-    def get_raw_price(self, instrument_code):
-        """
-        Get instrument price. Overrides Data() method
-        """
-
-        ### This method will get the instrument price from self._datapath, for a specific
-
-    def get_instrument_raw_carry_data(self, instrument_code):
-        """
-        Returns a pd. dataframe with the 4 columns PRICE, CARRY, PRICE_CONTRACT, CARRY_CONTRACT
-
-    Overrides FuturesData method
-        """
-
-    def _get_instrument_data(self):
-        """
-        Get a data frame of interesting information about instruments
-        Private method used by other methods wanting static data
-        """
-
-    def get_instrument_list(self):
-        """
-        list of instruments in this data set. Overrides Data() method
-        """
-
-
-    def get_value_of_block_price_move(self, instrument_code):
-        """
-        How much is a $1 move worth in value terms?
-        Overrides Data() method
-        """
-
-    def get_instrument_currency(self, instrument_code):
-        """
-        What is the currency that this instrument is priced in?
-        Overrides Data() method
-        """
-
-
-    def _get_fx_data(self, currency1, currency2):
-        ##Overrides Data() method
-    ## Note that we don't include any other fx methods here; the one's in the data class should do just fine
-```
 
 <a name="config"> </a>
 
@@ -1318,7 +1402,7 @@ system=futures_system()
 Effectively it implements the following;
 
 ```python
-data=csvFuturesData() ## or the data object that has been passed
+data=csvFuturesSimData() ## or the data object that has been passed
 config=Config("systems.provided.futures_chapter15.futuresconfig.yaml") ## or the config object that is passed
 
 ## Optionally the user can provide trading_rules (something which can be parsed as a set of trading rules); however this defaults to None in which case
@@ -1347,7 +1431,7 @@ system=futures_system()
 Effectively it implements the following;
 
 ```python
-data=csvFuturesData() ## or the data object that has been passed
+data=csvFuturesSimData() ## or the data object that has been passed
 config=Config("systems.provided.futures_chapter15.futuresconfig.yaml") ## or the config object that is passed
 
 ## Optionally the user can provide trading_rules (something which can be parsed as a set of trading rules); however this defaults to None in which case
@@ -1838,7 +1922,7 @@ Then it's a case of creating the python function. Here is an extract from the
 ```python
 ## We probably need these to get our data
 
-from sysdata.csvdata import csvFuturesData
+from sysdata.csv.csv_sim_futures_data import csvFuturesSimData
 from sysdata.configdata import Config
 
 ## We now import all the stages we need
@@ -1853,24 +1937,15 @@ from systems.account import Account
 
 
 def futures_system( data=None, config=None, trading_rules=None,  log_level="on"):
-    """
+    simD
+ata
 
-    :param data: data object (defaults to reading from csv files)
-    :type data: sysdata.data.Data, or anything that inherits from it
 
-    :param config: Configuration object (defaults to futuresconfig.yaml in this directory)
-    :type config: sysdata.configdata.Config
 
-    :param trading_rules: Set of trading rules to use (defaults to set specified in config object)
-    :param trading_rules: list or dict of TradingRules, or something that can be parsed to that
 
-    :param log_level: How much logging to do
-    :type log_level: str
-
-    """
 
     if data is None:
-        data=csvFuturesData()
+        data=csvFuturesSimData()
 
     if config is None:
         config=Config("systems.provided.futures_chapter15.futuresconfig.yaml")
@@ -2341,7 +2416,7 @@ a look at an incomplete version of the pre-baked chapter 15 futures system.
 ```python
 ## We probably need these to get our data
 
-from sysdata.csvdata import csvFuturesData
+from sysdata.csv.csv_sim_futures_data import csvFuturesSimData
 from sysdata.configdata import Config
 from systems.basesystem import System
 
@@ -2349,7 +2424,7 @@ from systems.basesystem import System
 from systems.forecasting import Rules
 from systems.futures.rawdata import FuturesRawData
 
-data=csvFuturesData()
+data=csvFuturesSimData()
 config=Config("systems.provided.futures_chapter15.futuresconfig.yaml")
 
 rules=Rules()
@@ -3882,7 +3957,7 @@ All other methods in pysystemtrade use fixed capital.
 
 ## Table of standard system.data and system.stage methods
 
-The tables in this section list all the methods that can be used to get data
+The tables in this section list all the public methods that can be used to get data
 out of a system and its 'child' stages. You can also use the methods() method:
 
 ```python
