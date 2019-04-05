@@ -1,3 +1,12 @@
+This is the main userguide for pysystemtrade. Before reading this you should have gone through the [introduction.](/docs/introduction.md)
+
+Related documents:
+
+- [Storing futures and spot FX data](/docs/futures.md)
+- [Using pysystemtrade as a production trading environment](/docs/production.md)
+- [Connecting pysystemtrade to interactive brokers](/docs/IB.md)
+
+
 This guide is divided into four parts. The first ['How do I?'](#how_do_i)
 explains how to do many common tasks. The second part ['Guide'](#guide) details
 the relevant parts of the code, and explains how to modify or create new parts.
@@ -3643,8 +3652,8 @@ The system, data, config and each stage object all have a .log attribute, to
 allow the system to report to the user; as do the functions provided to
 estimate correlations and do optimisations.
 
-In the current version this just prints to screen, although in future logging
-will be able to write to databases and files, and send emails if critical
+In the current version this just prints to screen, although in production systems it
+can write to databases and files (FIX ME LINK), and send emails if critical
 events are happening.
 
 The pre-baked systems I've included all include a parameter log_level. This can

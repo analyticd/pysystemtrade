@@ -1,5 +1,19 @@
 # Release notes
 
+## Version 0.20.0
+
+Started documenting 'how to run a production system'
+Created logging to mongo database
+Refactoring of mongo and arctic connections
+Started creating crontab and scripts for various production functions (read and write FX prices)
+Added code to ensure unique client ID for IB
+
+## Version 0.19.0
+
+Added connection code for Interactive Brokers. See [connecting pysystemtrade to interactive brokers](/docs/IB.md) for more details.
+Implemented data socket for spot FX, getting data from IB
+Added handcrafting optimisation code.
+
 ## Version 0.18.2
 Added methods to read weight data from csv files
 Put generalised non linear mapping into forecast combination
@@ -284,9 +298,6 @@ Moved most examples except core to seperate git [here](https://github.com/robcar
 
 # Features to add -next release
 
-* Check does 'cheap rules' not work when fixed instrument rules, know about weight==0
-* Refactor yaml code to drop pyyaml (no long supported)
-* Add risk overlay
 
 # Features to add - later releases
 
@@ -294,12 +305,14 @@ Moved most examples except core to seperate git [here](https://github.com/robcar
 
   * Parallel processing of - getting data, trading rules, p&l calculation, optimisation
   * Create live config from a system object (Put final value of estimates into a yaml file) 
-  * Exogenous risk model
-  * check systems have correct attributes; check turnover, minimum size, right forecast scalars (distribution across instruments) etc
+  * Check systems have correct attributes; check turnover, minimum size, right forecast scalars (distribution across instruments) etc
+  * Check does 'cheap rules' not work when fixed instrument rules, know about weight==0
+  * Refactor yaml code to drop pyyaml (no long supported)
+  * Add risk overlay
+
 
 * Live trading:
 
-  * ib broker interface
   * accounting
   * order / position reconciliation
   * issue market order 
