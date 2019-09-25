@@ -1,3 +1,5 @@
+#+STARTUP: showall
+
 This guide is divided into four parts. The first [[id:1D9EE0EF-3EA3-4EEA-864F-7DFFE3499F46][How do I?]] explains how to do
 many common tasks. The second part [[id:2D7D8DA7-6101-42D1-8E5D-7C54A431818C][Guide]] details the relevant parts of the
 code, and explains how to modify or create new parts. The third part [[id:C193F690-BA62-43CB-8997-51667EF233E3][Processes]] 
@@ -4814,8 +4816,7 @@ optimised individually, which is slower.
 *** Working out net costs (both instrument and forecast weights)
 
 Again I recommend you check out this
-[[http://qoppac.blogspot.co.uk/2016/05/optimising-weights-with-costs.html][blog
-post]].
+[[http://qoppac.blogspot.co.uk/2016/05/optimising-weights-with-costs.html][blog post]].
 
 #+BEGIN_EXAMPLE
 forecast_weight_estimate: ## can also be applied to instrument weights
@@ -4930,8 +4931,7 @@ will override the effect of any pooling or changes to cost calculation.
 If we haven't accounted for costs earlier (eg by setting =cost_multiplier=0=)
 then we can adjust our portfolio weights according to costs after they've been
 calculated. See this blog post
-[[http://qoppac.blogspot.co.uk/2016/05/optimising-weights-with-costs.html][blog
-post]].
+[[http://qoppac.blogspot.co.uk/2016/05/optimising-weights-with-costs.html][blog post]].
 
 If weights are /cleaned/, then in a fitting period when we need a weight, but
 none has been calculated (due to insufficient data for example), an instrument
@@ -4944,8 +4944,7 @@ is given a share of the weight.
  ## Estimating correlations and diversification multipliers
 
 See
-[[http://qoppac.blogspot.co.uk/2016/01/correlations-weights-multipliers.html][my
-blog post]]
+[[http://qoppac.blogspot.co.uk/2016/01/correlations-weights-multipliers.html][my blog post]]
 
 You can estimate diversification multipliers for both instruments (IDM - see
 chapter 11) and forecasts (FDM - see chapter 8).
